@@ -87,7 +87,7 @@ class Constants {
         playerName9 = "$NO_NAME$";
         enableAPlayers = false;
         skillBoost = true;
-        skillBoostValue = 99.9999D;
+        skillBoostValue = 99.9999;
         gmPowerToSet = 5;
         equipmentEnchants = true;
         giveWeapon = true;

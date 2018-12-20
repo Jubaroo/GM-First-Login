@@ -19,12 +19,22 @@ public class Initiator implements WurmServerMod, PlayerLoginListener, Configurab
 
     @Override
     public void configure(Properties properties) {
-        Config.doConfig(properties);
+        try {
+            Config.doConfig(properties);
+        } catch (IllegalArgumentException |
+                ClassCastException e) {
+            logger.log(Level.SEVERE, "Error in configure()", e);
+        }
     }
 
     static void jDebug(String msg) {
-        if (Constants.debug) {
-            logger.log(Level.INFO, msg);
+        try {
+            if (Constants.debug) {
+                logger.log(Level.INFO, msg);
+            }
+        } catch (IllegalArgumentException |
+                ClassCastException e) {
+            logger.log(Level.SEVERE, "Error in jDebug()", e);
         }
     }
 

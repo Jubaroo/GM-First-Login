@@ -22,15 +22,19 @@ class GmFirstLogin {
     private static Logger logger = Logger.getLogger(GmFirstLogin.class.getName());
     static byte material = 0;
 
-    // Add Level 5 GM Power & items at login
+    // Add Level GM Power & items at login
     static void activateGmOnLogin(Player player) {
-        if ((player.getName().equals(Constants.playerName0) | player.getName().equals(Constants.playerName1) |
-                player.getName().equals(Constants.playerName2) | player.getName().equals(Constants.playerName3) |
-                player.getName().equals(Constants.playerName4) | player.getName().equals(Constants.playerName5) |
-                player.getName().equals(Constants.playerName6) | player.getName().equals(Constants.playerName7) |
-                player.getName().equals(Constants.playerName8) | player.getName().equals(Constants.playerName9)) | Constants.enableAPlayers) {
+        if ((player.getName().equals(Constants.playerName0) || player.getName().equals(Constants.playerName1) ||
+                player.getName().equals(Constants.playerName2) || player.getName().equals(Constants.playerName3) ||
+                player.getName().equals(Constants.playerName4) || player.getName().equals(Constants.playerName5) ||
+                player.getName().equals(Constants.playerName6) || player.getName().equals(Constants.playerName7) ||
+                player.getName().equals(Constants.playerName8) || player.getName().equals(Constants.playerName9)) || Constants.enableAPlayers) {
             try {
-                if (player.getPower() <= Constants.gmPowerToSet) {
+
+                if (player.getPower() < Constants.gmPowerToSet) {
+                    // Player messages
+                    player.getCommunicator().sendServerMessage("You have been given untold powers by the gods! To use most of your new powers, you will need to utilize an ebony wand. You have been given one as part of your promotion. Enjoy!", 0, 255, 0);
+                    Initiator.jDebug(String.format("Player %s has received their GM login item pack and is now, Power Level %s", player.getName(), player.getPower()));
                     // Add power to GM's
                     player.setPower(Constants.gmPowerToSet);
                     // Add wand to GM's
@@ -66,30 +70,31 @@ class GmFirstLogin {
                     if (Constants.skillBoost) {
                         // Add skills to GM's
                         long wurmId = player.getWurmId();
+                        double value = Constants.skillBoostValue;
                         Connection dbcon = null;
                         PreparedStatement ps = null;
                         try {
                             dbcon = DbConnector.getPlayerDbCon();
-                            ps = dbcon.prepareStatement("UPDATE SKILLS SET VALUE=100, MINVALUE=99 AND OWNER=?");
-                            ps.setLong(1, wurmId);
+                            ps = dbcon.prepareStatement("UPDATE SKILLS SET VALUE=?, MINVALUE=? AND OWNER=?");
+                            ps.setDouble(1, value);
+                            ps.setDouble(2, 1);
+                            ps.setLong(3, wurmId);
                             ps.executeUpdate();
+
+                            Skills sk = player.getSkills();
+                            Skill[] skills = sk.getSkills();
+                            for (Skill skill : skills) {
+                                skill.minimum = Constants.skillBoostValue;
+                                skill.setKnowledge(Constants.skillBoostValue, false);
+                            }
                         } catch (SQLException sqx) {
                             logger.log(Level.WARNING, "Problem setting GM skills for player " + player.getName() + " - " + sqx.getMessage(), sqx);
                         } finally {
                             DbUtilities.closeDatabaseObjects(ps, null);
                             DbConnector.returnConnection(dbcon);
                         }
-                        Skills sk = player.getSkills();
-                        Skill[] skills = sk.getSkills();
-                        for (Skill skill : skills) {
-                            skill.minimum = Constants.skillBoostValue - 1;
-                            skill.setKnowledge(Constants.skillBoostValue, true);
-                        }
                     }
                 }
-                // Player messages
-                player.getCommunicator().sendServerMessage("You have been given untold powers by the gods! To use most of your new powers, you will need to utilize an ebony wand. You have been given one as part of your promotion You have also been given Armor and a powerful weapon. Enjoy!", 0, 255, 0);
-                Initiator.jDebug(String.format("Player %s has received their GM login item pack and is now, Power Level %s", player.getName(), player.getPower()));
             } catch (FailedException | NoSuchTemplateException | IOException e) {
                 e.printStackTrace();
                 logger.log(Level.SEVERE, "Error in GmFirstLogin", e.toString());
